@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>WTRUMP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: black;
+            overflow-x: hidden;
+            perspective: 1000px;
+        }
+        
+        .three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .parallax-element {
+            transform: translateZ(0);
+            transition: transform 0.2s;
+        }
+
+        .cartoon-text {
+            font-family: 'Bangers', cursive;
+            color: #39FF14;
+            text-shadow: 
+                0 0 5px #39FF14,
+                0 0 10px #39FF14,
+                0 0 20px #39FF14,
+                0 0 40px #39FF14;
+        }
+        .scroll-text {
+            white-space: nowrap;
+            animation: scroll 20s linear infinite;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .image-bounce {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        .title-flash {
+            animation: flash 1.5s infinite;
+        }
+        @keyframes flash {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* 鼠标跟随效果 */
+        .cursor-follower {
+            width: 20px;
+            height: 20px;
+            background: rgba(57, 255, 20, 0.3);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s;
+            mix-blend-mode: screen;
+        }
+
+        /* 改进社交图标效果 */
+        .social-icon {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .social-icon:hover {
+            transform: translateZ(50px) rotateX(10deg) rotateY(10deg);
+            box-shadow: 0 10px 30px rgba(57, 255, 20, 0.3);
+        }
+
+        /* 修改社交媒体链接容器样式 */
+        .rounded-full {
+            transition: all 0.3s ease;
+        }
+
+        .rounded-full:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        /* 改进按钮效果 */
+        .pulse-button {
+            position: relative;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 0 0 rgba(0, 204, 0, 0.7);
+            transition: all 0.3s;
+        }
+        .pulse-button:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 204, 0, 0.4);
+        }
+
+        .mega-title {
+            animation: megaEffect 3s infinite;
+            transform-origin: center;
+            position: relative;
+            text-shadow: 0 0 10px #39FF14;
+        }
+        .mega-title::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: translateZ(-10px);
+            opacity: 0.5;
+            filter: blur(5px);
+        }
+        @keyframes megaEffect {
+            0% {
+                transform: scale(1) rotate(0deg);
+                text-shadow: 0 0 10px #39FF14;
+            }
+            25% {
+                transform: scale(1.1) rotate(5deg);
+                text-shadow: 0 0 20px #39FF14, 0 0 30px #39FF14;
+            }
+            50% {
+                transform: scale(1) rotate(0deg);
+                text-shadow: 0 0 40px #39FF14, 0 0 50px #39FF14, 0 0 60px #39FF14;
+            }
+            75% {
+                transform: scale(1.1) rotate(-5deg);
+                text-shadow: 0 0 20px #39FF14, 0 0 30px #39FF14;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                text-shadow: 0 0 10px #39FF14;
+            }
+        }
+
+        /* 移动端适配优化 */
+        @media (max-width: 768px) {
+            .scroll-text {
+                font-size: clamp(0.6rem, 2.5vw, 1.2rem) !important;
+                padding: 0 10px;
+                text-shadow: 
+                    0 0 5px #39FF14,
+                    0 0 10px #39FF14,
+                    0 0 20px #39FF14,
+                    0 0 40px #39FF14;
+            }
+            
+            .mega-title {
+                font-size: clamp(4rem, 15vw, 8rem) !important;
+                margin-bottom: 20px;
+                animation: pulse 2s infinite !important;
+                text-shadow: 0 0 40px #39FF14 !important;
+                transition: all 0.3s;
+            }
+
+            @keyframes pulse {
+                0% {
+                    text-shadow: 0 0 40px #39FF14;
+                }
+                50% {
+                    text-shadow: 0 0 40px #39FF14;
+                }
+                100% {
+                    text-shadow: 0 0 40px #39FF14;
+                }
+            }
+
+            .title-flash {
+                font-size: clamp(1rem, 3.5vw, 1.8rem) !important;
+                position: fixed !important;
+                bottom: 100px !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                width: 100% !important;
+                text-align: center !important;
+                z-index: 25 !important;
+                margin: 0 !important;
+                padding: 0 20px !important;
+                text-shadow: 
+                    0 0 5px #39FF14,
+                    0 0 10px #39FF14,
+                    0 0 20px #39FF14,
+                    0 0 40px #39FF14;
+            }
+
+            .image-bounce {
+                transform: scale(0.4);
+            }
+
+            .image-bounce img {
+                max-width: 120px;
+                max-height: 120px;
+            }
+
+            .pulse-button {
+                font-size: clamp(0.7rem, 2.8vw, 1.4rem) !important;
+                padding: 0.4rem 0.8rem !important;
+                position: absolute !important;
+                left: 10px !important;
+                transform: translateY(-50%) !important;
+                white-space: nowrap;
+                width: auto !important;
+            }
+
+            .social-icon {
+                transform: scale(0.6);
+            }
+
+            /* 调整图片位置 */
+            .absolute.top-0.left-0 { 
+                left: -20px; 
+                top: 70px;
+            }
+            .absolute.top-0.right-0 { 
+                right: -20px; 
+                top: 70px;
+            }
+            .absolute.bottom-0.left-0 { 
+                left: -20px; 
+                bottom: 220px; 
+            }
+            .absolute.bottom-0.right-0 { 
+                right: -20px; 
+                bottom: 220px; 
+            }
+
+            /* 优化社交图标布局 */
+            .space-x-6 {
+                gap: 0.5rem !important;
+                display: flex !important;
+                justify-content: center !important;
+                margin-bottom: 1rem !important;
+            }
+
+            /* 优化社交图标大小 */
+            .w-16 {
+                width: 2.5rem !important;
+            }
+            .h-16 {
+                height: 2.5rem !important;
+            }
+
+            /* 优化社交图标内部图标大小 */
+            .text-4xl {
+                font-size: 1.25rem !important;
+            }
+            .w-10 {
+                width: 1.5rem !important;
+            }
+            .h-10 {
+                height: 1.5rem !important;
+            }
+
+            /* 优化页脚在移动端的显示 */
+            footer {
+                padding: 10px 15px !important;
+                position: fixed !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                z-index: 20 !important;
+                background: rgba(17, 17, 17, 0.8) !important;
+                backdrop-filter: blur(5px) !important;
+            }
+
+            /* 优化动画开关按钮 */
+            #toggleButton {
+                font-size: 0.75rem !important;
+                padding: 4px 8px !important;
+                width: 100px !important;
+                height: 25px !important;
+            }
+        }
+
+        /* 平板端适配优化 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .scroll-text {
+                font-size: clamp(1.2rem, 4vw, 2.5rem) !important;
+                padding: 0 20px;
+            }
+
+            .mega-title {
+                font-size: clamp(2.5rem, 8vw, 5rem) !important;
+                margin-bottom: 30px;
+            }
+
+            .title-flash {
+                font-size: clamp(1.8rem, 5vw, 3rem) !important;
+                margin-bottom: 100px !important;
+            }
+
+            .image-bounce {
+                transform: scale(0.6);
+            }
+
+            .image-bounce img {
+                max-width: 180px;
+                max-height: 180px;
+            }
+
+            /* 调整图片位置 */
+            .absolute.top-0.left-0 { 
+                left: -20px; 
+                top: 80px;
+            }
+            .absolute.top-0.right-0 { 
+                right: -20px; 
+                top: 80px;
+            }
+            .absolute.bottom-0.left-0 { 
+                left: -20px; 
+                bottom: 120px; 
+            }
+            .absolute.bottom-0.right-0 { 
+                right: -20px; 
+                bottom: 120px; 
+            }
+
+            /* 优化社交图标间距 */
+            .space-x-6 {
+                gap: 1rem !important;
+            }
+
+            /* 优化社交图标大小 */
+            .w-16 {
+                width: 3.5rem !important;
+            }
+            .h-16 {
+                height: 3.5rem !important;
+            }
+
+            /* 优化社交图标内部图标大小 */
+            .text-4xl {
+                font-size: 1.75rem !important;
+            }
+            .w-10 {
+                width: 2rem !important;
+            }
+            .h-10 {
+                height: 2rem !important;
+            }
+        }
+
+        /* 触摸设备优化 */
+        @media (hover: none) {
+            .pulse-button:active {
+                transform: translateY(-2px) scale(1.05) translateX(-50%) !important;
+            }
+
+            /* 优化触摸设备的点击区域 */
+            .rounded-full {
+                padding: 5px;
+            }
+
+            /* 优化触摸设备的交互反馈 */
+            .rounded-full:active {
+                transform: scale(0.95);
+                opacity: 0.7;
+            }
+        }
+
+        /* 横屏模式优化 */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .image-bounce {
+                transform: scale(0.3);
+            }
+
+            .image-bounce img {
+                max-width: 100px;
+                max-height: 100px;
+            }
+
+            .title-flash {
+                margin-bottom: 40px !important;
+            }
+
+            .pulse-button {
+                bottom: 60px !important;
+            }
+
+            /* 调整图片位置 */
+            .absolute.top-0.left-0 { 
+                top: 40px;
+            }
+            .absolute.top-0.right-0 { 
+                top: 40px;
+            }
+            .absolute.bottom-0.left-0 { 
+                bottom: 60px; 
+            }
+            .absolute.bottom-0.right-0 { 
+                bottom: 60px; 
+            }
+        }
+    </style>
+</head>
+<body class="bg-black min-h-screen flex flex-col">
+    <!-- 鼠标跟随效果 -->
+    <div class="cursor-follower"></div>
+    
+    <!-- Toggle Button -->
+    <div class="absolute top-4 right-4 z-50">
+        <button id="toggleButton" class="bg-[#00CC00] text-white text-sm font-bold py-1 px-4 rounded-md w-[120px] h-[30px]">
+            Show Animations: On
+        </button>
+    </div>
+    <div class="flex-grow flex flex-col items-center justify-center relative">
+        <!-- Top left image -->
+        <div class="absolute top-0 left-0 transform rotate-180 image-bounce">
+            <img alt="Donald Trump wearing a colorful propeller hat, making a silly face" class="w-64 h-64 object-cover" height="300" src="./images/trump1.jpg.png" width="300"/>
+        </div>
+        <!-- Top right image -->
+        <div class="absolute top-0 right-0 transform rotate-180 image-bounce">
+            <img alt="Donald Trump wearing a colorful propeller hat, making a different silly face" class="w-64 h-64 object-cover" height="300" src="./images/trump2.jpg.png" width="300"/>
+        </div>
+        <!-- Bottom left image -->
+        <div class="absolute bottom-0 left-0 image-bounce">
+            <img alt="Donald Trump wearing a colorful propeller hat, making another silly face" class="w-64 h-64 object-cover" height="300" src="./images/trump3.jpg.png" width="300"/>
+        </div>
+        <!-- Bottom right image -->
+        <div class="absolute bottom-0 right-0 image-bounce">
+            <img alt="Donald Trump wearing a colorful propeller hat, making yet another silly face" class="w-64 h-64 object-cover" height="300" src="./images/trump4.jpg.png" width="300"/>
+        </div>
+        <!-- Center content -->
+        <div class="z-10 text-center">
+            <!-- Scrolling CA text -->
+            <div class="overflow-hidden mb-4">
+                <p class="scroll-text cartoon-text text-6xl">
+                    Contract Address (CA): 0x1234567890123456789012345678901234567890
+                </p>
+            </div>
+            <div class="mb-2">
+                <p class="text-sm cartoon-text">
+                    WTRUMP
+                </p>
+            </div>
+            <div class="mb-8">
+                <h1 class="text-8xl font-bold cartoon-text tracking-wider mega-title" data-text="WTRUMP">
+                    WTRUMP
+                </h1>
+            </div>
+            <!-- Social media icons -->
+            <div class="flex justify-center space-x-6 mb-8">
+                <a class="rounded-full border-2 border-yellow-500 w-16 h-16 usa-flag-icon hover:opacity-80 transition duration-300 flex items-center justify-center" href="https://t.me/wtrump">
+                    <i class="fab fa-telegram-plane text-4xl text-white"></i>
+                </a>
+                <a class="rounded-full border-2 border-yellow-500 w-16 h-16 usa-flag-icon hover:opacity-80 transition duration-300 flex items-center justify-center" href="https://twitter.com/wtrump">
+                    <i class="fab fa-twitter text-4xl text-white"></i>
+                </a>
+                <a class="rounded-full border-2 border-yellow-500 w-16 h-16 usa-flag-icon hover:opacity-80 transition duration-300 flex items-center justify-center" href="https://dexscreener.com/">
+                    <img src="images/dexscreener.png" alt="Dexscreener" class="w-10 h-10" />
+                </a>
+                <a class="rounded-full border-2 border-yellow-500 w-16 h-16 usa-flag-icon hover:opacity-80 transition duration-300 flex items-center justify-center" href="https://jup.ag/swap">
+                    <img src="images/jupiter.png" alt="Jupiter" class="w-10 h-10" />
+                </a>
+            </div>
+        </div>
+        <!-- Bottom center text -->
+        <div class="absolute bottom-0 left-0 right-0 text-center mb-4 z-20">
+            <p class="cartoon-text text-6xl title-flash">
+                LET US BE GREAT AGAIN
+            </p>
+        </div>
+        <!-- BUY WTRUMP Button -->
+        <div class="absolute left-0 top-[50%] translate-y-[-50%] z-30">
+            <a class="inline-block bg-[#00CC00] cartoon-text text-black text-4xl py-2 px-4 rounded-lg hover:bg-[#00AA00] transition duration-300 pulse-button" href="https://raydium.io/swap/?inputMint=sol&outputMint=Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB">
+                BUY WTRUMP
+            </a>
+        </div>
+    </div>
+    <!-- Footer -->
+    <footer class="bg-[#111] h-[100px] flex items-center justify-between px-8">
+        <div class="text-[#666] text-xs">
+            © 2025 WTRUMP
+        </div>
+        <div class="space-x-4">
+            <a class="text-[#CCC] text-xs hover:text-[#00CC00] transition duration-300" href="#">
+                Privacy Policy
+            </a>
+            <a class="text-[#CCC] text-xs hover:text-[#00CC00] transition duration-300" href="#">
+                Terms
+            </a>
+        </div>
+    </footer>
+    <script>
+        // 在所有脚本之前检查是否显示过封面
+        if (!sessionStorage.getItem('coverShown')) {
+            window.location.replace('index.html');
+        }
+
+        // 添加页面可见性变化监听，确保刷新或返回时也会检查
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && !sessionStorage.getItem('coverShown')) {
+                window.location.replace('index.html');
+            }
+        });
+
+        // 现有的动画控制代码
+        const toggleButton = document.getElementById('toggleButton');
+        const animatedElements = document.querySelectorAll('.image-bounce, .title-flash, .scroll-text');
+        let isAnimated = true;
+
+        // Three.js 背景动画
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.domElement.classList.add('three-canvas');
+        document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+        // 创建网格波浪效果
+        const planeGeometry = new THREE.PlaneGeometry(10, 10, 50, 50);
+        const planeMaterial = new THREE.MeshPhongMaterial({
+            color: 0x39FF14,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3,
+            side: THREE.DoubleSide
+        });
+
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = Math.PI / 3;
+        scene.add(plane);
+
+        // 添加环境光
+        const ambientLight = new THREE.AmbientLight(0x39FF14, 0.5);
+        scene.add(ambientLight);
+
+        // 添加点光源
+        const pointLight = new THREE.PointLight(0x39FF14, 1);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        camera.position.z = 5;
+
+        // 动画循环
+        const animate = () => {
+            requestAnimationFrame(animate);
+            
+            // 更新网格顶点位置
+            const time = Date.now() * 0.001;
+            const vertices = planeGeometry.attributes.position;
+            
+            for(let i = 0; i < vertices.count; i++) {
+                const x = vertices.getX(i);
+                const y = vertices.getY(i);
+                const xsin = Math.sin(x + time);
+                const ycos = Math.cos(y + time);
+                vertices.setZ(i, xsin * ycos * 0.5);
+            }
+            
+            vertices.needsUpdate = true;
+            plane.rotation.z += 0.001;
+            
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // 视差效果
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            gsap.to(plane.rotation, {
+                y: x * 0.5 - 0.25,
+                x: Math.PI / 3 + y * 0.2 - 0.1,
+                duration: 2
+            });
+        });
+
+        // 响应式调整
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 现有的动画开关代码
+        toggleButton.addEventListener('click', () => {
+            isAnimated = !isAnimated;
+            if (!isAnimated) {
+                toggleButton.textContent = 'Show Animations: Off';
+                toggleButton.classList.remove('bg-[#00CC00]');
+                toggleButton.classList.add('bg-[#333]');
+                animatedElements.forEach(el => {
+                    el.style.animationPlayState = 'paused';
+                    el.style.opacity = '0.5';
+                });
+                renderer.domElement.style.opacity = '0';
+            } else {
+                toggleButton.textContent = 'Show Animations: On';
+                toggleButton.classList.remove('bg-[#333]');
+                toggleButton.classList.add('bg-[#00CC00]');
+                animatedElements.forEach(el => {
+                    el.style.animationPlayState = 'running';
+                    el.style.opacity = '1';
+                });
+                renderer.domElement.style.opacity = '1';
+            }
+        });
+
+        // 鼠标跟随效果
+        const cursor = document.querySelector('.cursor-follower');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+
+        document.addEventListener('mousedown', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+        });
+
+        document.addEventListener('mouseup', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+
+        // 添加平滑滚动
+        document.documentElement.style.scrollBehavior = 'smooth';
+
+        // 根据设备性能调整Three.js设置
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+            renderer.setPixelRatio(1); // 降低移动端像素比
+            planeGeometry.dispose(); // 释放不需要的资源
+            planeMaterial.wireframe = false; // 移动端关闭线框模式以提升性能
+            planeMaterial.opacity = 0.2;
+        }
+
+        // 优化移动端动画性能
+        const optimizePerformance = () => {
+            if (isMobile) {
+                document.querySelectorAll('.image-bounce').forEach(el => {
+                    el.style.animationDuration = '3s';
+                });
+                document.querySelector('.scroll-text').style.animationDuration = '30s';
+            }
+        };
+        optimizePerformance();
+
+        // 处理设备方向变化
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+                if (!isMobile) {
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                }
+                
+                // 重新计算元素位置
+                document.querySelectorAll('.image-bounce').forEach(el => {
+                    el.style.opacity = '1';
+                });
+                
+                // 优化性能
+                optimizePerformance();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

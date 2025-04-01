@@ -1,0 +1,428 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>WTRUMP - Official Meme Token</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        .three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            touch-action: none;
+        }
+
+        .title {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Bangers', cursive;
+            font-size: clamp(4rem, 15vw, 8rem);
+            color: #39FF14;
+            text-shadow: 
+                0 0 10px #39FF14,
+                0 0 20px #39FF14,
+                0 0 40px #39FF14,
+                0 0 80px #39FF14;
+            z-index: 1;
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+            white-space: nowrap;
+            padding: 0 20px;
+            text-align: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .title:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        @keyframes pulse {
+            0% {
+                text-shadow: 
+                    0 0 10px #39FF14,
+                    0 0 20px #39FF14,
+                    0 0 40px #39FF14,
+                    0 0 80px #39FF14;
+            }
+            50% {
+                text-shadow: 
+                    0 0 20px #39FF14,
+                    0 0 40px #39FF14,
+                    0 0 80px #39FF14,
+                    0 0 120px #39FF14;
+            }
+            100% {
+                text-shadow: 
+                    0 0 10px #39FF14,
+                    0 0 20px #39FF14,
+                    0 0 40px #39FF14,
+                    0 0 80px #39FF14;
+            }
+        }
+
+        .click-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Roboto', sans-serif;
+            color: #39FF14;
+            opacity: 0.7;
+            z-index: 1;
+            animation: fadeInOut 2s infinite;
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            white-space: nowrap;
+            padding: 0 20px;
+            text-align: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: clamp(2.5rem, 12vw, 6rem);
+                padding: 0 10px;
+            }
+
+            .click-hint {
+                font-size: clamp(0.8rem, 3vw, 1.2rem);
+                bottom: 1rem;
+            }
+
+            .three-canvas {
+                opacity: 0.8;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .title {
+                font-size: clamp(3.5rem, 13vw, 7rem);
+            }
+        }
+
+        @media (hover: none) {
+            .title:active {
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(57, 255, 20, 0.3);
+            border-radius: 50%;
+            border-top-color: #39FF14;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            font-family: 'Bangers', cursive;
+            color: #39FF14;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px #39FF14;
+        }
+        
+        .social-links {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 10;
+        }
+        
+        .social-link {
+            color: #39FF14;
+            font-size: 1.5rem;
+            opacity: 0.7;
+            pointer-events: none;
+            cursor: default;
+        }
+        
+        .social-link:hover {
+            opacity: 0.7;
+            transform: none;
+            text-shadow: none;
+        }
+        
+        .sound-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            color: #39FF14;
+            font-size: 1.5rem;
+            opacity: 0.7;
+            z-index: 10;
+            pointer-events: none;
+            cursor: default;
+        }
+        
+        .sound-toggle:hover {
+            opacity: 0.7;
+            transform: none;
+            text-shadow: none;
+        }
+        
+        .token-info {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            color: #39FF14;
+            font-size: 1rem;
+            z-index: 10;
+            text-shadow: 0 0 5px #39FF14;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading WTRUMP...</div>
+    </div>
+
+    <div class="title">WTRUMP</div>
+    <div class="click-hint">Click to Enter the Meme Realm</div>
+    
+    <div class="sound-toggle" id="soundToggle">
+        <i class="fas fa-volume-up"></i>
+    </div>
+    
+    <div class="social-links">
+        <a class="social-link"><i class="fab fa-twitter"></i></a>
+        <a class="social-link"><i class="fab fa-telegram"></i></a>
+        <a class="social-link"><i class="fas fa-globe"></i></a>
+    </div>
+
+    <div class="token-info">
+        <p>$WTRUMP: The Memeiest Token in Crypto</p>
+    </div>
+
+    <script>
+        // Loading screen
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                loadingOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                }, 300);
+            }, 800);
+        });
+        
+        // Sound toggle functionality
+        let soundEnabled = true;
+        const soundToggle = document.getElementById('soundToggle');
+        const clickSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3');
+        
+        soundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            if (soundEnabled) {
+                soundToggle.innerHTML = '<i class="fas fa-volume-up"></i>';
+                clickSound.volume = 0.5;
+            } else {
+                soundToggle.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                clickSound.volume = 0;
+            }
+        });
+        
+        // Title click to enter
+        document.querySelector('.title').addEventListener('click', () => {
+            if (soundEnabled) {
+                clickSound.play();
+            }
+            
+            const title = document.querySelector('.title');
+            gsap.to(title, {
+                scale: 1.5,
+                opacity: 0,
+                duration: 0.5,
+                onComplete: () => {
+                    sessionStorage.setItem('coverShown', 'true');
+                    window.location.href = 'main.html';
+                }
+            });
+        });
+
+        // Three.js background animation setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            powerPreference: "high-performance"
+        });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.domElement.classList.add('three-canvas');
+        document.body.appendChild(renderer.domElement);
+
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const gridDensity = isMobile ? 30 : 50;
+        const planeSize = isMobile ? 12 : 15;
+
+        const planes = [];
+        for(let i = 0; i < 3; i++) {
+            const planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize, gridDensity, gridDensity);
+            const planeMaterial = new THREE.MeshPhongMaterial({
+                color: 0x39FF14,
+                wireframe: true,
+                transparent: true,
+                opacity: isMobile ? 0.15 : 0.2,
+                side: THREE.DoubleSide
+            });
+
+            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.rotation.x = Math.PI / 3;
+            plane.position.z = -2 * i;
+            scene.add(plane);
+            planes.push(plane);
+        }
+
+        const ambientLight = new THREE.AmbientLight(0x39FF14, 0.5);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0x39FF14, 1);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = isMobile ? 500 : 1000;
+        const posArray = new Float32Array(particlesCount * 3);
+        
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 20;
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0x39FF14,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        camera.position.z = isMobile ? 6 : 5;
+
+        const animate = () => {
+            requestAnimationFrame(animate);
+            
+            planes.forEach((plane, index) => {
+                const time = Date.now() * 0.001;
+                const vertices = plane.geometry.attributes.position;
+                
+                for(let i = 0; i < vertices.count; i++) {
+                    const x = vertices.getX(i);
+                    const y = vertices.getY(i);
+                    const xsin = Math.sin(x + time + index);
+                    const ycos = Math.cos(y + time + index);
+                    vertices.setZ(i, xsin * ycos * (isMobile ? 0.3 : 0.5));
+                }
+                
+                vertices.needsUpdate = true;
+                plane.rotation.z += 0.001;
+            });
+            
+            particlesMesh.rotation.x += 0.0005;
+            particlesMesh.rotation.y += 0.0005;
+            
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        const handleMove = (x, y) => {
+            const normalizedX = (x - window.innerWidth / 2) / 1000;
+            const normalizedY = (y - window.innerHeight / 2) / 1000;
+            
+            planes.forEach(plane => {
+                gsap.to(plane.rotation, {
+                    y: normalizedX,
+                    x: Math.PI / 3 + normalizedY,
+                    duration: 2
+                });
+            });
+            
+            gsap.to(particlesMesh.rotation, {
+                x: normalizedY * 0.5,
+                y: normalizedX * 0.5,
+                duration: 2
+            });
+        };
+
+        document.addEventListener('mousemove', (e) => {
+            handleMove(e.clientX, e.clientY);
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleMove(touch.clientX, touch.clientY);
+        }, { passive: false });
+
+        window.addEventListener('resize', () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        });
+
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            }, 100);
+        });
+    </script>
+</body>
+</html>
